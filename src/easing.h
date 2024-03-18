@@ -19,8 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef __EASING_H__
 #define __EASING_H__
 
+#include "mn_conf.h"
+
 #include "stdint.h"
 #include "stdbool.h"
+#include "math.h"
 
 //! 工作模式
 typedef uint8_t easing_mode_t;

@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "mnui.h"
+#include "./mnui.h"
 
 //!Public Variable
 mn_param_t mn_p_list_param = {
@@ -113,6 +113,14 @@ void mn_p_list_handler_enter(mn_p_list_t* page, int style)
 
   switch(mn_item->uType)
   {
+    case MN_ITEM_TYPE_BUTTON:
+    {
+      if(mn_item->lpfnFunction)
+      {
+        mn_item->lpfnFunction(NULL,0);
+      }      
+      break;
+    }
     case MN_ITEM_TYPE_PAGE:
     {
       #if MN_LOG_TRACE_LIST_INDEV
@@ -218,8 +226,7 @@ mn_handle_t mn_p_list_creatGeneral(
   mn_p_list_t*      page,
   uint32_t          memType,
   mn_item_t*        items,
-  uint32_t          itemCount,
-  mn_param_t*       param
+  uint32_t          itemCount
   )
 {
   memType &= MN_MEM_TYPE_MASK;
@@ -252,7 +259,7 @@ mn_handle_t mn_p_list_creatGeneral(
   page->uType     = MN_PAGE_TYPE_LIST|memType;
   page->uTypeSize = sizeof(mn_p_list_t);
   page->pcTitle   = title;
-  page->pxParam   = param ? param : &mn_p_list_param;
+  page->pxParam   = &mn_p_list_param;
   u8g2_SetFont(mn_u8g2, page->pxParam->puFont);
   page->pxParent  = NULL;
   easing_init(&page->eX,EASING_MODE_DEFAULT,

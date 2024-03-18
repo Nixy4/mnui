@@ -30,7 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "./easing.h"
 
-//! 日志
+//!日志
 #define MN_LOG_LEVEL_TRACE 0
 #define MN_LOG_LEVEL_INFO  1
 #define MN_LOG_LEVEL_WARN  2
@@ -82,12 +82,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   #define MN_LOG_USER(...)
 #endif
 
-//! 工具宏
+//!工具宏
 #define MN_HOR_MID      (((float)MN_HOR_RES)/2.f) 
 #define MN_VER_MID      (((float)MN_VER_RES)/2.f)
 #define ARRAY_COUNT(x)  (sizeof(x)/sizeof(x[0]))
 
-//! 工作状态
+//!工作状态
 #define MN_STATE_PAGE_SWITCHING    0U
 #define MN_STATE_PAGE_NORMAL       1U
 #define MN_STATE_WINDOW_CLOSED     1U
@@ -95,12 +95,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define MN_STATE_WINDOW_OPENED     3U
 #define MN_STATE_WINDOW_OPENING    4U
 
-//! 页面句柄
+//!页面句柄
 typedef void* mn_handle_t;
-//! 函数类型
+//!函数类型
 typedef void (*mn_function_t)(void* arg_ptr,int style);
 
-//! 输入设备
+//!输入设备
 //输入设备工作模式
 #define MN_INDEV_TYPE_POLL 0x01 //轮询模式
 #define MN_INDEV_TYPE_IRQ  0x02 //中断模式
@@ -124,7 +124,7 @@ typedef struct _mn_indev_struct
   uint8_t           puValBuf;    //键值缓存
 }mn_indev_t;
 
-//! 参数
+//!参数
 typedef struct _mn_param_struct
 {
   uint8_t           uFrame;         //帧数
@@ -132,7 +132,7 @@ typedef struct _mn_param_struct
   const uint8_t*    puFont;         //字体
 }mn_param_t;
 
-//! 图标
+//!图标
 typedef struct _mn_icon_struct
 {
   const uint8_t* pcuData;
@@ -140,7 +140,7 @@ typedef struct _mn_icon_struct
   uint16_t       uHeight;
 }mn_icon_t;
 
-//! 指示器
+//!指示器
 typedef struct _mn_pointer_struct
 {
   uint32_t    bEnable;    //指针使能
@@ -152,14 +152,25 @@ typedef struct _mn_pointer_struct
   uint8_t     uR;         //半径
 }mn_pointer_t;
 
-//! 选项
+//!选项
 //页面项类型
-#define MN_ITEM_TYPE_NONE       0U
-#define MN_ITEM_TYPE_INFO       1U
-#define MN_ITEM_TYPE_PAGE       2U
-#define MN_ITEM_TYPE_SWITCH     3U
-#define MN_ITEM_TYPE_VALUEINT   4U
-#define MN_ITEM_TYPE_VALUEFLOAT 5U
+// #define MN_ITEM_TYPE_NONE       0U
+// #define MN_ITEM_TYPE_BUTTON     1U
+// #define MN_ITEM_TYPE_INFO       2U
+// #define MN_ITEM_TYPE_PAGE       3U
+// #define MN_ITEM_TYPE_SWITCH     4U
+// #define MN_ITEM_TYPE_VALUEINT   5U
+// #define MN_ITEM_TYPE_VALUEFLOAT 6U
+enum
+{
+  MN_ITEM_TYPE_NONE = 0U,
+  MN_ITEM_TYPE_BUTTON,
+  MN_ITEM_TYPE_INFO,
+  MN_ITEM_TYPE_PAGE,
+  MN_ITEM_TYPE_SWITCH,
+  MN_ITEM_TYPE_VALUEINT,
+  MN_ITEM_TYPE_VALUEFLOAT,
+};
 
 #define MN_ITEM_INFO_MAX 6
 
@@ -183,7 +194,7 @@ typedef struct _mn_item_struct
 
 }mn_item_t;
 
-//! 窗口
+//!窗口
 //窗口数据结构
 typedef struct _mn_window_struct
 {
@@ -192,11 +203,11 @@ typedef struct _mn_window_struct
   easing            eY;            //y轴缓动值
   easing            eW;            //宽度缓动值
   easing            eH;            //高度缓动值
-  easing            eProcW;        //进度条宽度缓动值
+  easing            eProcVal;        //进度条宽度缓动值
   mn_param_t*       pxParam;       //参数
 }mn_window_t;
 
-//! 页面基本数据
+//!页面基本数据
 #define MN_MEM_TYPE_MASK     0xF0U //页面内存掩码
 #define MN_MEM_TYPE_STATIC   0x10U //静态内存
 #define MN_MEM_TYPE_DYNAMI   0x20U //动态内存
@@ -221,7 +232,7 @@ typedef struct _mn_page_struct
   uint8_t     uItemIndex;       //列表项索引
 }mn_page_t;
 
-//! 自定义页面
+//!自定义页面
 typedef struct _mn_p_custom_struct
 {
   //mn_page_t成员
@@ -242,14 +253,13 @@ typedef struct _mn_p_custom_struct
 
 }mn_p_custom_t;
 
-//! 列表页面
+//!列表页面
 #define MN_PAGE_LIST_POINTER2_WIDTH  5U
 //页面样式
 #define MN_PAGE_LIST_STYLE_0         0U
 #define MN_PAGE_LIST_STYLE_1         1U
 #define MN_PAGE_LIST_STYLE_2         2U
-
-
+//列表页面数据结构
 typedef struct _mn_p_list_struct
 {
   //mn_page_t成员
@@ -302,6 +312,24 @@ typedef struct _mn_p_icon_struct
   easing      eIconRise;        //图标上升缓动
 }mn_p_icon_t;
 
+//!进度条页面
+typedef struct _mn_p_progress_struct
+{
+  //mn_page_t成员
+  uint8_t     uType;            //页面类型
+  uint16_t    uTypeSize;        //页面类型大小
+  const char* pcTitle;          //页面标题
+  mn_param_t* pxParam;          //页面参数
+  mn_handle_t pxParent;         //父页面
+  easing      eX;               //x轴缓动值
+  easing      eY;               //y轴缓动值
+  mn_item_t*  pxItems;          //工作点项
+  uint32_t    uItemCount;       //工作点数量
+  uint8_t     uItemIndex;       //工作点索引
+  //
+  easing      eProcVal;           //进度条宽度缓动值
+}mn_p_progress_t;
+
 //! indev.c
 //输入设备初始化函数
 void mn_indev_init(
@@ -341,19 +369,18 @@ void mn_window_disappear(mn_handle_t handle, int style);
 void mn_window_handler(mn_handle_t handle, int style);
 void mn_window_painter(mn_handle_t handle, int style);
 
-//! p_custom.c
+//! p_list.c
 mn_handle_t mn_p_list_creatGeneral(
   const char*       title,
   mn_p_list_t*      page,
   uint32_t          memType,
   mn_item_t*        items,
-  uint32_t          itemCount,
-  mn_param_t*       param
+  uint32_t          itemCount
   );
-#define mn_p_list_create(title,items,itemCount,param) \
-  mn_p_list_creatGeneral(title,NULL,MN_MEM_TYPE_DYNAMI,items,itemCount,param)
-#define mn_p_list_createStatic(title,page,items,itemCount,param) \
-  mn_p_list_creatGeneral(title,page,MN_MEM_TYPE_STATIC,items,itemCount,param)
+#define mn_p_list_create(title,items,itemCount) \
+  mn_p_list_creatGeneral(title,NULL,MN_MEM_TYPE_DYNAMI,items,itemCount)
+#define mn_p_list_createStatic(title,page,items,itemCount) \
+  mn_p_list_creatGeneral(title,page,MN_MEM_TYPE_STATIC,items,itemCount)
 
 void mn_p_list_appear(mn_p_list_t* page,int style);
 void mn_p_list_disappear(mn_p_list_t* page,int style);
@@ -366,18 +393,21 @@ mn_handle_t mn_p_icon_createGeneral(
   mn_p_icon_t*      page,
   uint32_t          memType,
   mn_item_t*        items,
-  uint16_t          itemCount,
-  mn_param_t*       param
+  uint16_t          itemCount
   );
-#define mn_p_icon_create(title,items,itemCount,param) \
-  mn_p_icon_createGeneral(title,NULL,MN_MEM_TYPE_DYNAMI,items,itemCount,param)
-#define mn_p_icon_createStatic(title,page,items,itemCount,param) \
-  mn_p_icon_createGeneral(title,page,MN_MEM_TYPE_STATIC,items,itemCount,param)  
+#define mn_p_icon_create(title,items,itemCount) \
+  mn_p_icon_createGeneral(title,NULL,MN_MEM_TYPE_DYNAMI,items,itemCount)
+#define mn_p_icon_createStatic(title,page,items,itemCount) \
+  mn_p_icon_createGeneral(title,page,MN_MEM_TYPE_STATIC,items,itemCount)  
 
 void mn_p_icon_appear(mn_p_icon_t* page,int style);
 void mn_p_icon_disappear(mn_p_icon_t* page,int style);
 void mn_p_icon_handler(mn_p_icon_t* page,int style);
 void mn_p_icon_painter(mn_p_icon_t* page,int style);
+
+//! p_progress.c
+
+
 
 //! core.c
 void mn_init(u8g2_t* u8g2, int arg_int);
@@ -417,7 +447,7 @@ extern mn_p_list_t*   mn_plist;
 extern mn_p_icon_t*   mn_picon;
 extern mn_p_custom_t* mn_pcustom;
 
-extern mn_param_t     mn_defaultParam;
+extern mn_param_t     mn_global_param;
 
 //! indev.c
 extern mn_indev_t     mn_indev;

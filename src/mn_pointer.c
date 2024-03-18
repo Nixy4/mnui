@@ -16,14 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "mnui.h"
+#include "./mnui.h"
 
 mn_pointer_t  mn_pointer1;
 mn_pointer_t  mn_pointer2;
 
 void mn_pointer_set_param(mn_pointer_t* p,mn_param_t* pa,uint8_t r)
 {
-  p->pxParam = pa ? pa : &mn_defaultParam;
+  p->pxParam = pa ? pa : &mn_global_param;
   p->eX.lpfnCalc = p->pxParam->lpfnEasingCalc;
   p->eX.uFrameCnt = p->pxParam->uFrame;
   p->eY.lpfnCalc = p->pxParam->lpfnEasingCalc;
@@ -38,7 +38,7 @@ void mn_pointer_set_param(mn_pointer_t* p,mn_param_t* pa,uint8_t r)
 void mn_pointer_init(mn_pointer_t* p,mn_param_t* pa,uint8_t r)
 {
   p->bEnable = 0;
-  p->pxParam = pa ? pa : &mn_defaultParam;
+  p->pxParam = pa ? pa : &mn_global_param;
   easing_init(&p->eX,EASING_MODE_DEFAULT,p->pxParam->lpfnEasingCalc,p->pxParam->uFrame,0,0);
   easing_init(&p->eY,EASING_MODE_DEFAULT,p->pxParam->lpfnEasingCalc,p->pxParam->uFrame,0,0);
   easing_init(&p->eW,EASING_MODE_DEFAULT,p->pxParam->lpfnEasingCalc,p->pxParam->uFrame,0,0);
@@ -48,12 +48,14 @@ void mn_pointer_init(mn_pointer_t* p,mn_param_t* pa,uint8_t r)
   p->uR = r;
 }
 
-__MN_INLINE void mn_pointer_enable(mn_pointer_t* p)
+__MN_INLINE 
+void mn_pointer_enable(mn_pointer_t* p)
 {
   p->bEnable = 1;
 }
 
-__MN_INLINE void mn_pointer_disable(mn_pointer_t* p)
+__MN_INLINE 
+void mn_pointer_disable(mn_pointer_t* p)
 {
   p->bEnable = 0;
 }

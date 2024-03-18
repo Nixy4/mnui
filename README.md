@@ -1,9 +1,5 @@
 # MNUI
 
-## 叠甲
-
-本人小学文凭，编程功底较差，代码皆为屎山，欢迎各位大佬指教, 同步测试
-
 ## 简介
 
 这是一个基于U8g2的开源UI框架, 专用于单色显示屏。
@@ -34,7 +30,7 @@
 
 - 稚晖君
 
-  monoui，UltraLink UI
+  UltraLink UI
 
   参考了部分界面的设计
 
@@ -54,7 +50,6 @@
 
   使用了其日志系统部分的代码，LVGL代码基于MIT协议
 
-  
 
 本软件
 
@@ -62,9 +57,7 @@
 
 以【缓动变量easing】为实现动画特效的主要变量。
 
-
-
-因为一般使用单色显示屏的微控制器RAM和Flash较为有限，屏幕分辨率有限，且easing变量占用内存较多，如果采用lvgl类似的obj结构，感觉内存和性能会不是很够，个人也没有思考出更好的动画实现或框架结构，最终根据uYanki项目中以页面为操作对象的思想，做了大量重新设计后得到此框架。
+因为一般使用单色显示屏的微控制器RAM和Flash较为有限，屏幕分辨率有限，且easing变量占用内存较多，如果采用lvgl类似的obj结构，感觉内存和性能会不是很够，个人也没有思考出更好的动画实现或框架结构，最终根据以页面为操作对象的思想，做了大量重新设计后得到此框架。
 
 目前只完成了少量功能
 
@@ -96,8 +89,6 @@
 - 更多的已有页面类型、窗口、指示器的样式
 - 常见的光线传感器、温湿度传感器、ADC等数据绘制页面
 
-
-
 ## 可移植性
 
 该框架有一定的可移植性，可以根据初始化选项列表的各参数直接生成对应风格的菜单，选项，窗口等。
@@ -105,7 +96,7 @@
 - 初始化UI,绑定U8g2句柄
 
   ```c
-  u8g2_Init(&u8g2,&hi2c1,0x78);//u8g2初始化函数
+  u8g2_init(&u8g2,&hi2c1,0x78);//u8g2初始化函数
   mn_init(&u8g2,0);//mnui初始化函数
   ```
 
@@ -197,10 +188,10 @@ void mnf_led_item1(mn_handle_t handle,int event)
   switch(event)
   {
     case 0:
-      led(LED_R,LED_OFF);
+      led_switch(LED_R,LED_OFF);
       break;
     case 1:
-      led(LED_R,LED_ON);
+      led_switch(LED_R,LED_ON);
       break;
   }
 }
@@ -211,9 +202,9 @@ void mnf_led_item4(mn_handle_t handle,int event)
 {
   mn_plist = (mn_p_list_t*)handle;//页面指针
   mn_item  = &mn_plist->pxItems[mn_plist->uItemIndex];//选项指针
-  led_light(LED_R,mn_item->xData.sValue.val);//亮度设置函数,读取选项当前值
-  led_light(LED_G,mn_item->xData.sValue.val);
-  led_light(LED_B,mn_item->xData.sValue.val);
+  bsp_led_light(LED_R,mn_item->xData.sValue.val);//亮度设置函数,读取选项当前值
+  bsp_led_light(LED_G,mn_item->xData.sValue.val);
+  bsp_led_light(LED_B,mn_item->xData.sValue.val);
 }
 //页面句柄
 mn_handle_t mnh_led;
@@ -249,7 +240,7 @@ mn_item_t mni_led[]={
 void main()
 {
   //0.初始化硬件,u8g2,以及mnui核心
-  u8g2_Init(&u8g2,&hi2c1,0x78);//u8g2初始化函数
+  u8g2_init(&u8g2,&hi2c1,0x78);//u8g2初始化函数
   mn_init(&u8g2,0);//mnui初始化函数
   
   //1.初始化各个页面,申请内存,初始化坐标参数,传入选项数组等

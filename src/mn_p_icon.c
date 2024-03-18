@@ -16,7 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "mnui.h"
+#include "./mnui.h"
+
+//!Private Variable
+mn_param_t mn_p_icon_param={
+  .uFrame = 20,
+  .lpfnEasingCalc = _easing_calc_OutCubic,
+  .puFont = u8g2_font_6x10_tf,
+};
 
 //!Private Function
 void mn_p_icon_handler_prevItem(mn_p_icon_t* page)
@@ -65,6 +72,14 @@ void mn_p_icon_handler_enter(mn_p_icon_t* page)
   {
     switch(mn_item->uType)
     {
+      case MN_ITEM_TYPE_NONE:
+      {
+        break;
+      }
+      case MN_ITEM_TYPE_BUTTON:
+      {
+        break;
+      }
       case MN_ITEM_TYPE_INFO:
       {
         mn_window_open(page);
@@ -73,6 +88,19 @@ void mn_p_icon_handler_enter(mn_p_icon_t* page)
       case MN_ITEM_TYPE_PAGE:
       {
         mn_switch_page(mn_item->xData.xChild);
+        break;
+      }
+      case MN_ITEM_TYPE_SWITCH:
+      {
+        break;
+      }
+      case MN_ITEM_TYPE_VALUEINT:
+      {
+        mn_window_open(page);
+        break;
+      }
+      case MN_ITEM_TYPE_VALUEFLOAT:
+      {
         break;
       }
     }
@@ -123,8 +151,7 @@ mn_handle_t mn_p_icon_createGeneral(
   mn_p_icon_t*        page,
   uint32_t            memType,
   mn_item_t*          items,
-  uint16_t            itemCount,
-  mn_param_t*         param
+  uint16_t            itemCount
   )
 {
   //*参数检查
@@ -151,7 +178,7 @@ mn_handle_t mn_p_icon_createGeneral(
   page->uType     = MN_PAGE_TYPE_ICON|memType;
   page->uTypeSize = sizeof(mn_p_icon_t);
   page->pcTitle   = title;
-  page->pxParam   = param ? param : &mn_defaultParam;
+  page->pxParam   = &mn_p_icon_param;
   u8g2_SetFont(mn_u8g2, page->pxParam->puFont);
   page->pxParent  = NULL;
   easing_init(&page->eX,

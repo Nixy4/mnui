@@ -16,9 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "mn_conf.h"
+
 #include "easing.h"
-#include "math.h"
 
 #define PI 3.1415926
 

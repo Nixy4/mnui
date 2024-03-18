@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "mnui.h"
+#include "./mnui.h"
 mn_indev_t mn_indev={0};
 
 /**

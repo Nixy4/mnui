@@ -15,35 +15,58 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "mnui.h"
+#include "./mnui.h"
 
-#define plistProcW        100
-#define plistProcH        ( (MN_VER_RES-mn_plist->fItemHeight) / 3 )
+//---------------------------------------------------------------------------
+#define plistWindowW      (MN_HOR_RES)
+#define plistWindowH      (MN_VER_RES-mn_plist->fItemHeight)
 #define plistLineW        2
-#define plistProcPaddingX (MN_HOR_RES-(plistProcW+plistLineW))/2
-#define plistProcPaddingY ((MN_VER_RES-mn_plist->fItemHeight)/2-plistProcH/2-1)
 
+#define plistProcW        100.f
+#define plistProcH        (plistWindowH/3.f)
+#define plistProcPaddingX ((MN_HOR_RES-(plistProcW+plistLineW))/2.f)
+#define plistProcPaddingY (plistWindowH/2.f-plistProcH/2.f-1)
 
+//---------------------------------------------------------------------------
+#define piconWindowW      (MN_HOR_RES/2.f)
+#define piconWindowH      (MN_VER_RES)
+#define piconLineW        2
 
-#define sMax          ( mn_item->xData.sValue.max )
-#define sMin          ( mn_item->xData.sValue.min )
-#define sVal          ( mn_item->xData.sValue.val )
-#define sBlockCount   ( mn_item->xData.sValue.blockCount )
-#define sBlock        ( ((((float)sMax-(float)sMin)/(float)sBlockCount)) )
-#define sProcW        ( (((float)sVal-(float)sMin)/((float)sMax-(float)sMin)*(float)plistProcW) )
+#define piconProcAreaX    (0)
+#define piconProcAreaY    (0)
+#define piconProcAreaW    (piconWindowW/2.f)
+#define piconProcAreaH    (piconWindowH)
 
-#define fMax          (mn_item->xData.fValue.max)
-#define fMin          (mn_item->xData.fValue.min)
-#define fVal          (mn_item->xData.fValue.val)
-#define fBlockCount   (mn_item->xData.fValue.blockCount)
-#define fBlock        ((fMax-fMin)/fBlockCount)
-#define fProcW        ((float)((fVal-fMin)/(fMax-fMin)*plistProcW))
+#define piconProcW        (piconProcAreaW/2.f)
+#define piconProcH        (piconProcAreaH*3.f/4.f)
+
+#define piconProcPaddingX ((piconProcAreaW-piconProcW)/2.f)
+#define piconProcPaddingY ((piconProcAreaH-piconProcH)/2.f)
+
+//---------------------------------------------------------------------------
+#define sMax        ( mn_item->xData.sValue.max )
+#define sMin        ( mn_item->xData.sValue.min )
+#define sVal        ( mn_item->xData.sValue.val )
+#define sBlockCount ( mn_item->xData.sValue.blockCount )
+
+#define sBlockVal   ( ((((float)sMax-(float)sMin)/(float)sBlockCount)) )
+#define sProcVal    ( (((float)sVal-(float)sMin)/((float)sMax-(float)sMin)*(float)plistProcW) )
+
+#define sBlockW     ( (float)((sVal-sMin)/(sMax-sMin)*plistProcW) )
+#define sProcW      ( (float)((sVal-sMin)/(sMax-sMin)*plistProcW) )
+
+#define fMax          ( mn_item->xData.fValue.max )
+#define fMin          ( mn_item->xData.fValue.min )
+#define fVal          ( mn_item->xData.fValue.val )
+#define fBlockCount   ( mn_item->xData.fValue.blockCount )
+#define fBlock        ( (fMax-fMin)/fBlockCount)
+#define fProcW        ( (float)((fVal-fMin)/(fMax-fMin)*plistProcW) )
 
 mn_window_t   mn_window={0};
 
 void mn_window_init()
 {
-  mn_window.pxParam = &mn_defaultParam;
+  mn_window.pxParam = &mn_global_param;
   easing_init(&mn_window.eX,EASING_MODE_DEFAULT,
     mn_window.pxParam->lpfnEasingCalc,mn_window.pxParam->uFrame,0,0);
   easing_init(&mn_window.eY,EASING_MODE_DEFAULT,
@@ -52,7 +75,7 @@ void mn_window_init()
     mn_window.pxParam->lpfnEasingCalc,mn_window.pxParam->uFrame,0,0);
   easing_init(&mn_window.eH,EASING_MODE_DEFAULT,
     mn_window.pxParam->lpfnEasingCalc,mn_window.pxParam->uFrame,0,0);
-  easing_init(&mn_window.eProcW,EASING_MODE_DEFAULT,
+  easing_init(&mn_window.eProcVal,EASING_MODE_DEFAULT,
     mn_window.pxParam->lpfnEasingCalc,mn_window.pxParam->uFrame,0,0);
 }
 
@@ -106,7 +129,7 @@ void mn_window_appear(mn_handle_t handle, int arg_int)
           MN_LOG_TRACE("itemType:valueInt");
           #endif
           //重置进度条宽度
-          easing_start_absolute(&mn_window.eProcW,0,sProcW);
+          easing_start_absolute(&mn_window.eProcVal,0,sProcVal);
           break;
         }
         case MN_ITEM_TYPE_VALUEFLOAT:
@@ -115,7 +138,7 @@ void mn_window_appear(mn_handle_t handle, int arg_int)
           MN_LOG_TRACE("itemType:valueFloat");
           #endif
           //重置进度条宽度
-          easing_start_absolute(&mn_window.eProcW,0,fProcW);
+          easing_start_absolute(&mn_window.eProcVal,0,fProcW);
           break;
         }
         default:break;
@@ -146,6 +169,30 @@ void mn_window_appear(mn_handle_t handle, int arg_int)
       //偏移指示器1
       mn_pointer_moveRelative(&mn_pointer1,
         (mn_picon->fItemSide/2+(MN_HOR_MID-mn_picon->fItemSide)/2),0);
+
+      mn_item = &mn_picon->pxItems[mn_picon->uItemIndex];
+      switch( mn_item->uType )
+      {
+        case MN_ITEM_TYPE_VALUEINT:
+        {
+          #if MN_LOG_TRACE_WINDOW_RANDER
+          MN_LOG_TRACE("itemType:valueInt");
+          #endif
+          //重置进度条宽度
+          easing_start_absolute(&mn_window.eProcVal,0,sProcVal);
+          break;
+        }
+        case MN_ITEM_TYPE_VALUEFLOAT:
+        {
+          #if MN_LOG_TRACE_WINDOW_RANDER
+          MN_LOG_TRACE("itemType:valueFloat");
+          #endif
+          //重置进度条宽度
+          easing_start_absolute(&mn_window.eProcVal,0,fProcW);
+          break;
+        }
+        default:break;
+      }
 
       #if MN_LOG_TRACE_WINDOW_RANDER
       MN_LOG_TRACE("page case end");
@@ -231,13 +278,13 @@ void mn_window_update_value(mn_handle_t handle, int arg_int)
         if(sVal<sMax)
         {
           //更新数值
-          sVal+=sBlock;
+          sVal+=sBlockVal;
           if(sVal>sMax)
           {
             sVal = sMax;
           }
           //更新进度条缓动
-          easing_start_target(&mn_window.eProcW,sProcW);
+          easing_start_target(&mn_window.eProcVal,sProcVal);
         }
       }
       else
@@ -246,13 +293,13 @@ void mn_window_update_value(mn_handle_t handle, int arg_int)
         if(sVal>sMin)
         {
           //更新数值
-          sVal-=sBlock;
+          sVal-=sBlockVal;
           if(sVal<sMin)
           {
             sVal = sMin;
           }
           //更新进度条缓动
-          easing_start_target(&mn_window.eProcW,sProcW);
+          easing_start_target(&mn_window.eProcVal,sProcVal);
         }
       }
       break;
@@ -271,7 +318,7 @@ void mn_window_update_value(mn_handle_t handle, int arg_int)
             fVal = fMax;
           }
           //更新进度条缓动
-          easing_start_target(&mn_window.eProcW,fProcW);
+          easing_start_target(&mn_window.eProcVal,fProcW);
         }
       }
       else
@@ -286,7 +333,7 @@ void mn_window_update_value(mn_handle_t handle, int arg_int)
             fVal = fMin;
           }
           //更新进度条缓动
-          easing_start_target(&mn_window.eProcW,fProcW);
+          easing_start_target(&mn_window.eProcVal,fProcW);
         }
       }
       break;
@@ -302,12 +349,12 @@ void mn_window_handler(mn_handle_t handle, int arg_int)
   easing_update(&mn_window.eY);
   easing_update(&mn_window.eW);
   easing_update(&mn_window.eH);
-  easing_update(&mn_window.eProcW);
+  easing_update(&mn_window.eProcVal);
   mn_repaint_fromEasing(&mn_window.eX);
   mn_repaint_fromEasing(&mn_window.eY);
   mn_repaint_fromEasing(&mn_window.eW);
   mn_repaint_fromEasing(&mn_window.eH);
-  mn_repaint_fromEasing(&mn_window.eProcW);
+  mn_repaint_fromEasing(&mn_window.eProcVal);
 
   // bool windowRapaint = false;
   // windowRapaint = !(
@@ -315,7 +362,7 @@ void mn_window_handler(mn_handle_t handle, int arg_int)
   //   easing_isok(&mn_window.eY)&
   //   easing_isok(&mn_window.eW)&
   //   easing_isok(&mn_window.eH)&
-  //   easing_isok(&mn_window.eProcW)
+  //   easing_isok(&mn_window.eProcVal)
   // );
 
   // if(!windowRapaint)
@@ -387,27 +434,7 @@ void mn_window_painter_p_lsit(mn_handle_t handle, int arg_int)
     easing_get_int(&mn_pointer1.eY)+easing_get_int(&mn_pointer1.eH)
   );
   u8g2_SetDrawColor(mn_u8g2,1);
-  //绘制进度条
-  u8g2_DrawBox(mn_u8g2,
-    plistProcPaddingX,
-    mn_plist->fItemHeight+plistProcPaddingY-5,
-    easing_get_int(&mn_window.eProcW),
-    plistProcH
-  );
-  //外侧框
-  u8g2_DrawFrame(mn_u8g2,
-    plistProcPaddingX-plistLineW,
-    mn_plist->fItemHeight+plistProcPaddingY-plistLineW-5,
-    plistProcW+plistLineW*2,
-    plistProcH+plistLineW*2
-  );
-  //内侧框
-  u8g2_DrawFrame(mn_u8g2,
-    plistProcPaddingX-plistLineW/2,
-    mn_plist->fItemHeight+plistProcPaddingY-plistLineW/2-5,
-    plistProcW+plistLineW,
-    plistProcH+plistLineW
-  );
+
   //绘制最大值和最小值
   #define    bntFlag (U8G2_BTN_BW0|U8G2_BTN_SHADOW0)
   char       valueBuff[20]  = {0};
@@ -421,9 +448,6 @@ void mn_window_painter_p_lsit(mn_handle_t handle, int arg_int)
       #if MN_LOG_TRACE_WINDOW_RANDER
       MN_LOG_TRACE("itemType:info");
       #endif
-
-
-
       break;
     }
     case MN_ITEM_TYPE_VALUEINT:
@@ -431,6 +455,27 @@ void mn_window_painter_p_lsit(mn_handle_t handle, int arg_int)
       #if MN_LOG_TRACE_WINDOW_RANDER
       MN_LOG_TRACE("itemType:valueInt");
       #endif
+      //绘制进度条
+      u8g2_DrawBox(mn_u8g2,
+        plistProcPaddingX,
+        mn_plist->fItemHeight+plistProcPaddingY-5,
+        easing_get_int(&mn_window.eProcVal),
+        plistProcH
+      );
+      //外侧框
+      u8g2_DrawFrame(mn_u8g2,
+        plistProcPaddingX-plistLineW,
+        mn_plist->fItemHeight+plistProcPaddingY-plistLineW-5,
+        plistProcW+plistLineW*2,
+        plistProcH+plistLineW*2
+      );
+      //内侧框
+      u8g2_DrawFrame(mn_u8g2,
+        plistProcPaddingX-plistLineW/2,
+        mn_plist->fItemHeight+plistProcPaddingY-plistLineW/2-5,
+        plistProcW+plistLineW,
+        plistProcH+plistLineW
+      );
       //最小值
       sprintf(valueBuff,"%d",mn_item->xData.sValue.min);
       u8g2_DrawButtonUTF8(mn_u8g2,
@@ -448,7 +493,7 @@ void mn_window_painter_p_lsit(mn_handle_t handle, int arg_int)
       u8g2_DrawBox(mn_u8g2,
         plistProcPaddingX,
         mn_plist->fItemHeight+plistProcPaddingY-5,
-        easing_get_int(&mn_window.eProcW),
+        easing_get_int(&mn_window.eProcVal),
         plistProcH
       );
       break;
@@ -475,7 +520,7 @@ void mn_window_painter_p_lsit(mn_handle_t handle, int arg_int)
       u8g2_DrawBox(mn_u8g2,
         plistProcPaddingX,
         mn_plist->fItemHeight+plistProcPaddingY-mn_plist->fPaddingY,
-        easing_get_int(&mn_window.eProcW),
+        easing_get_int(&mn_window.eProcVal),
         plistProcH
       );
       break;
@@ -511,6 +556,20 @@ void mn_window_painter_p_icon(mn_handle_t handle, int arg_int)
 
   mn_item = &mn_picon->pxItems[mn_picon->uItemIndex];
 
+  // #define infoPaddingX(i) ((MN_HOR_MID-u8g2_GetStrWidth(mn_u8g2,mn_item->xData.info[i]))/2)//居中
+  #define infoPaddingX(i) (u8g2_GetMaxCharWidth(mn_u8g2))//左对齐
+  #define infoPaddingY    ((MN_VER_RES-(u8g2_GetMaxCharHeight(mn_u8g2)*MN_ITEM_INFO_MAX))/2)//居中
+  // #define infoPaddingY    (u8g2_GetMaxCharHeight(mn_u8g2))//上对齐
+  
+  #define infoMaxWidth    (MN_HOR_RES-u8g2_GetMaxCharWidth(mn_u8g2)*2)
+  //限制u8g2绘制窗口
+  int w = easing_get_int(&mn_window.eW)-1;
+  w = w>3?w:3;
+  u8g2_SetClipWindow(mn_u8g2,
+    2,2,
+    w,MN_VER_RES-1
+  );
+
   switch( mn_get_itemType(mn_item) )
   {
     case MN_ITEM_TYPE_INFO:
@@ -518,20 +577,6 @@ void mn_window_painter_p_icon(mn_handle_t handle, int arg_int)
       #if MN_LOG_TRACE_WINDOW_RANDER
       MN_LOG_TRACE("itemType:info");
       #endif
-
-      // #define infoPaddingX(i) ((MN_HOR_MID-u8g2_GetStrWidth(mn_u8g2,mn_item->xData.info[i]))/2)//居中
-      #define infoPaddingX(i) (u8g2_GetMaxCharWidth(mn_u8g2))//左对齐
-      #define infoPaddingY    ((MN_VER_RES-(u8g2_GetMaxCharHeight(mn_u8g2)*MN_ITEM_INFO_MAX))/2)//居中
-      // #define infoPaddingY    (u8g2_GetMaxCharHeight(mn_u8g2))//上对齐
-      
-      #define infoMaxWidth    (MN_HOR_RES-u8g2_GetMaxCharWidth(mn_u8g2)*2)
-      //限制u8g2绘制窗口
-      int w = easing_get_int(&mn_window.eW)-1;
-      w = w>3?w:3;
-      u8g2_SetClipWindow(mn_u8g2,
-        2,2,
-        w,MN_VER_RES-1
-      );
       //绘制info
       u8g2_SetFont(mn_u8g2,u8g2_font_5x7_tf);
       for(uint8_t i=0;i<MN_ITEM_INFO_MAX;i++)
@@ -542,10 +587,6 @@ void mn_window_painter_p_icon(mn_handle_t handle, int arg_int)
           mn_item->xData.info[i]
         );
       }
-      //恢复大字体
-      u8g2_SetFont(mn_u8g2,mn_picon->pxParam->puFont);
-      //恢复u8g2绘制窗口
-      u8g2_SetMaxClipWindow(mn_u8g2);
       break;
     }
     case MN_ITEM_TYPE_VALUEINT:
@@ -553,8 +594,28 @@ void mn_window_painter_p_icon(mn_handle_t handle, int arg_int)
       #if MN_LOG_TRACE_WINDOW_RANDER
       MN_LOG_TRACE("itemType:valueInt");
       #endif
-
-
+      //绘制进度条-外侧框
+      u8g2_SetDrawColor(mn_u8g2,1);
+      u8g2_DrawFrame(mn_u8g2,
+        piconProcAreaX+piconProcPaddingX,
+        piconProcAreaY+piconProcPaddingY,
+        piconProcW,
+        piconProcH
+      );
+      //绘制进度条-内侧框
+      u8g2_DrawFrame(mn_u8g2,
+        piconProcAreaX+piconProcPaddingX-piconLineW/2,
+        piconProcAreaY+piconProcPaddingY-piconLineW/2,
+        piconProcW+piconLineW,
+        piconProcH+piconLineW
+      );
+      //绘制进度条-进度
+      u8g2_DrawBox(mn_u8g2,
+        piconProcAreaX+piconProcPaddingX,
+        piconProcAreaY+piconProcPaddingY+easing_get_int(&mn_window.eProcVal),
+        piconProcW,
+        easing_get_int(&mn_window.eProcVal)
+      );
       break;
     }
     case MN_ITEM_TYPE_VALUEFLOAT:
@@ -571,6 +632,10 @@ void mn_window_painter_p_icon(mn_handle_t handle, int arg_int)
       break;
     }
   }// item switch end
+  //恢复原字体
+  u8g2_SetFont(mn_u8g2,mn_picon->pxParam->puFont);
+  //恢复u8g2绘制窗口
+  u8g2_SetMaxClipWindow(mn_u8g2);
 }
 
 void mn_window_painter(mn_handle_t handle, int arg_int)
@@ -598,7 +663,6 @@ void mn_window_painter(mn_handle_t handle, int arg_int)
       #if MN_LOG_TRACE_WINDOW_RANDER
       MN_LOG_TRACE("pageType:icon");
       #endif
-
       mn_window_painter_p_icon(handle,arg_int);
       break;
     }
